@@ -1,121 +1,137 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
 import './App.css'
+import { supabase } from './lib/supabase'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [mode, setMode] = useState('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [session, setSession] = useState(null)
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      setSession(data.session)
+    }
+
+    loadSession()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [])
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const action = mode === 'login'
+        ? supabase.auth.signInWithPassword({ email, password })
+        : supabase.auth.signUp({ email, password })
+
+      const { data, error } = await action
+
+      if (error) {
+        setMessage(error.message)
+      } else if (mode === 'login' && data.session) {
+        setMessage('Sesión iniciada correctamente')
+      } else if (mode === 'register' && data.user) {
+        setMessage('Registro exitoso. Revisa tu correo si la confirmación está activa.')
+      }
+    } catch (error) {
+      setMessage('Ocurrió un error inesperado')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setMessage('Sesión cerrada')
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6 col-lg-5">
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-4">
+              <h1 className="h3 mb-3">Proyecto PPI</h1>
+              <p className="text-muted mb-4">
+                {session ? 'Tu sesión está activa.' : 'Inicia sesión o crea una cuenta.'}
+              </p>
 
-      <div className="ticks"></div>
+              {!session ? (
+                <>
+                  <div className="btn-group w-100 mb-4" role="group">
+                    <button
+                      type="button"
+                      className={`btn ${mode === 'login' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setMode('login')}
+                    >
+                      Iniciar sesión
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${mode === 'register' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setMode('register')}
+                    >
+                      Registrarse
+                    </button>
+                  </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                      <label className="form-label">Correo electrónico</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        required
+                      />
+                    </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+                    <div className="mb-3">
+                      <label className="form-label">Contraseña</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {message ? <div className="alert alert-info py-2">{message}</div> : null}
+
+                    <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                      {loading ? 'Procesando...' : mode === 'login' ? 'Entrar' : 'Crear cuenta'}
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div>
+                  <div className="alert alert-success">Sesión iniciada correctamente</div>
+                  <p className="mb-3">Usuario: {session.user?.email}</p>
+                  <button className="btn btn-outline-danger" onClick={handleSignOut}>
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
