@@ -10,7 +10,7 @@ import { PanelAdmin } from './components/pages/PanelAdmin'
 const menuItems = [
   { key: 'inicio', label: 'Inicio' },
   { key: 'reportar', label: 'Reportar' },
-  { key: 'panel-admin', label: 'Panel admin' },
+  { key: 'panel-admin', label: 'Panel de gestión' },
 ]
 
 function App() {
@@ -127,9 +127,9 @@ function App() {
         <div className="col-12 col-lg-10">
           <div className="card shadow-sm border-0">
             <div className="card-body p-4">
-              <h1 className="h3 mb-3">Proyecto PPI</h1>
+              <h1 className="h3 mb-3">Sistema Anónimo de Bullying</h1>
               <p className="text-muted mb-4">
-                {session ? 'Tu sesión está activa.' : 'Inicia sesión o crea una cuenta.'}
+                {session ? 'Tu sesión está activa.' : 'Inicia sesión o crea una cuenta para gestionar denuncias de forma anónima.'}
               </p>
 
               {!session ? (
