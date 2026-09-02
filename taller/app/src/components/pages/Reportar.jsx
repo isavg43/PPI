@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { createReport } from '../../lib/reports'
 
 const reportTypes = [
   { value: 'psicologico', label: 'Bullying psicológico' },
@@ -15,6 +15,9 @@ export function Reportar() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [confirmBeforeSubmit] = useState(
+    () => localStorage.getItem('confirmBeforeSubmit') !== 'false'
+  )
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -26,25 +29,23 @@ export function Reportar() {
       return
     }
 
-    setLoading(true)
-    const { error: insertError } = await supabase
-      .from('reports')
-      .insert([{
-        type,
-        description,
-        evidence_url: evidenceUrl || null,
-        status: 'pendiente',
-        assigned_to: null,
-      }])
-
-    setLoading(false)
-
-    if (insertError) {
-      setError(insertError.message)
+    if (confirmBeforeSubmit && !window.confirm('¿Deseas enviar esta denuncia?')) {
       return
     }
 
-    setMessage('Denuncia enviada correctamente. Gracias por reportar.')
+    setLoading(true)
+    createReport({
+      type,
+      description: description.trim(),
+      evidence_url: evidenceUrl.trim() || null,
+      status: 'pendiente',
+      assigned_to: null,
+    })
+    setLoading(false)
+
+    if (localStorage.getItem('showNotifications') !== 'false') {
+      setMessage('Denuncia enviada correctamente. Gracias por reportar.')
+    }
     setDescription('')
     setEvidenceUrl('')
     setType('psicologico')

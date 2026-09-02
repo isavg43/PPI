@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { getReports, updateReport } from '../../lib/reports'
 
 const statusOptions = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -26,35 +26,25 @@ export function PanelAdmin({ isAdmin }) {
     setLoading(true)
     setError('')
 
-    const { data, error: fetchError } = await supabase
-      .from('reports')
-      .select('*')
-      .order('created_at', { ascending: false })
-
+    const data = getReports()
     setLoading(false)
-
-    if (fetchError) {
-      setError(fetchError.message)
-      return
-    }
-
-    setReports(data || [])
+    setReports(data)
   }
 
   const handleUpdateReport = async (id, field, value) => {
-    setSavingId(id)
-    const { error: updateError } = await supabase
-      .from('reports')
-      .update({ [field]: value })
-      .eq('id', id)
-
-    setSavingId(null)
-
-    if (updateError) {
-      setError(updateError.message)
+    if (field === 'assigned_to' && !value.trim()) {
+      setError('Debes indicar un docente antes de guardar la asignación.')
       return
     }
 
+    if (field === 'status' && !statusOptions.some((option) => option.value === value)) {
+      setError('El estado seleccionado no es válido.')
+      return
+    }
+
+    setSavingId(id)
+    updateReport(id, { [field]: field === 'assigned_to' ? value.trim() : value })
+    setSavingId(null)
     fetchReports()
   }
 
@@ -118,7 +108,7 @@ export function PanelAdmin({ isAdmin }) {
                       type="text"
                       className="form-control"
                       value={report.assigned_to || ''}
-                      onChange={(event) => handleUpdateReport(report.id, 'assigned_to', event.target.value)}
+                      onBlur={(event) => handleUpdateReport(report.id, 'assigned_to', event.target.value)}
                       disabled={savingId === report.id}
                       placeholder="Docente asignado"
                     />

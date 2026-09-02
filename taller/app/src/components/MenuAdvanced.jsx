@@ -25,13 +25,13 @@ export function MenuAdvanced({
     { 
       key: 'acerca', 
       label: 'ℹ️ Acerca de', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Información del sistema' 
     },
     { 
       key: 'ayuda', 
       label: '❓ Ayuda', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Preguntas frecuentes' 
     },
   ]
@@ -53,13 +53,13 @@ export function MenuAdvanced({
     { 
       key: 'mis-reportes', 
       label: '📋 Mis reportes', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Seguimiento de mis denuncias' 
     },
     { 
       key: 'guia-seguridad', 
       label: '🛡️ Guía de seguridad', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Consejos de protección' 
     },
   ]
@@ -87,19 +87,19 @@ export function MenuAdvanced({
     { 
       key: 'mis-reportes', 
       label: '📋 Mis reportes', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Seguimiento de mis denuncias' 
     },
     { 
       key: 'estadisticas', 
       label: '📊 Estadísticas', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Análisis de reportes' 
     },
     { 
       key: 'configuracion', 
       label: '⚙️ Configuración', 
-      inConstruction: true,
+      inConstruction: false,
       description: 'Configurar el sistema' 
     },
   ]
@@ -111,11 +111,7 @@ export function MenuAdvanced({
       ? adminMenuItems 
       : userMenuItems
 
-  const handleMenuClick = (key, inConstruction) => {
-    if (inConstruction) {
-      alert(`⚠️ La página "${menuItems.find(item => item.key === key)?.label}" aún está en construcción.`)
-      return
-    }
+  const handleMenuClick = (key) => {
     onSelect(key)
   }
 
@@ -146,14 +142,10 @@ export function MenuAdvanced({
             className={`menu-item ${
               selectedPage === item.key ? 'active' : ''
             } ${item.inConstruction ? 'construction' : ''}`}
-            onClick={() => handleMenuClick(item.key, item.inConstruction)}
+            onClick={() => handleMenuClick(item.key)}
             title={item.description}
-            disabled={item.inConstruction}
           >
             <span className="item-label">{item.label}</span>
-            {item.inConstruction && (
-              <span className="construction-badge">EN CONSTRUCCIÓN</span>
-            )}
           </button>
         ))}
       </div>

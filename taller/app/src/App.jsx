@@ -15,12 +15,6 @@ import {
 } from './components/pages/EnConstruccion'
 import './components/pages/EnConstruccion.css'
 
-const menuItems = [
-  { key: 'inicio', label: 'Inicio' },
-  { key: 'reportar', label: 'Reportar' },
-  { key: 'panel-admin', label: 'Panel de gestión' },
-]
-
 function App() {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -50,12 +44,6 @@ function App() {
     setTimeout(() => {
       if (!email || !password) {
         setMessage('⚠️ Por favor completa todos los campos')
-        setLoading(false)
-        return
-      }
-
-      if (!email.includes('@')) {
-        setMessage('⚠️ Por favor ingresa un correo válido')
         setLoading(false)
         return
       }
@@ -96,29 +84,25 @@ function App() {
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const visibleMenuItems = isAdmin
-    ? menuItems
-    : menuItems.filter((item) => item.key !== 'panel-admin')
-
   const renderPage = () => {
     // Si no hay sesión, mostrar opciones de visitante
     if (!session) {
       switch (selectedPage) {
         case 'inicio':
-          return <Inicio isAdmin={false} />
+          return <Inicio isAdmin={false} onNavigate={setSelectedPage} />
         case 'acerca':
           return <AcercaDe />
         case 'ayuda':
           return <Ayuda />
         default:
-          return <Inicio isAdmin={false} />
+          return <Inicio isAdmin={false} onNavigate={setSelectedPage} />
       }
     }
 
     // Usuario logueado
     switch (selectedPage) {
       case 'inicio':
-        return <Inicio isAdmin={isAdmin} />
+        return <Inicio isAdmin={isAdmin} onNavigate={setSelectedPage} />
       
       case 'reportar':
         return <Reportar />
@@ -131,16 +115,16 @@ function App() {
 
       // Solo para administradores
       case 'panel-admin':
-        return isAdmin ? <PanelAdmin isAdmin={isAdmin} /> : <Inicio isAdmin={false} />
+        return isAdmin ? <PanelAdmin isAdmin={isAdmin} /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
       
       case 'estadisticas':
-        return isAdmin ? <Estadisticas /> : <Inicio isAdmin={false} />
+        return isAdmin ? <Estadisticas /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
       
       case 'configuracion':
-        return isAdmin ? <Configuracion /> : <Inicio isAdmin={false} />
+        return isAdmin ? <Configuracion /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
 
       default:
-        return <Inicio isAdmin={isAdmin} />
+        return <Inicio isAdmin={isAdmin} onNavigate={setSelectedPage} />
     }
   }
 
