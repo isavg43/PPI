@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { supabase } from './lib/supabase'
-import { Menu } from './components/Menu'
+import { MenuAdvanced } from './components/MenuAdvanced'
 import { LoginForm } from './components/LoginForm'
 import { Inicio } from './components/pages/Inicio'
 import { Reportar } from './components/pages/Reportar'
 import { PanelAdmin } from './components/pages/PanelAdmin'
-
-const menuItems = [
-  { key: 'inicio', label: 'Inicio' },
-  { key: 'reportar', label: 'Reportar' },
-  { key: 'panel-admin', label: 'Panel admin' },
-]
+import {
+  AcercaDe,
+  Ayuda,
+  MisReportes,
+  GuiaSeguridad,
+  Estadisticas,
+  Configuracion
+} from './components/pages/EnConstruccion'
+import './components/pages/EnConstruccion.css'
 
 function App() {
   const [mode, setMode] = useState('login')
@@ -20,150 +22,214 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [session, setSession] = useState(null)
-  const [profile, setProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [selectedPage, setSelectedPage] = useState('inicio')
 
+  // Cargar sesión al montar
   useEffect(() => {
-    const loadSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
-    }
-
-    loadSession()
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession)
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
+    const storedSession = localStorage.getItem('userSession')
+    if (storedSession) {
+      const userData = JSON.parse(storedSession)
+      setSession(userData)
+      setIsAdmin(userData.email.endsWith('@admin.com'))
     }
   }, [])
-
-  useEffect(() => {
-    const detectAdmin = async () => {
-      if (!session?.user) {
-        setProfile(null)
-        setIsAdmin(false)
-        return
-      }
-
-      const metadataRole = session.user?.app_metadata?.role || session.user?.user_metadata?.role
-      const isAdminFromMetadata = metadataRole === 'admin'
-      const isAdminFromEmail = session.user.email?.endsWith('@admin.com')
-      setIsAdmin(isAdminFromMetadata || isAdminFromEmail)
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
-
-      if (!error && data) {
-        setProfile(data)
-        setIsAdmin((prev) => prev || data.role === 'admin')
-      }
-    }
-
-    detectAdmin()
-  }, [session])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
     setMessage('')
 
-    try {
-      const action = mode === 'login'
-        ? supabase.auth.signInWithPassword({ email, password })
-        : supabase.auth.signUp({ email, password })
-
-      const { data, error } = await action
-
-      if (error) {
-        setMessage(error.message)
-      } else if (mode === 'login' && data.session) {
-        setMessage('Sesión iniciada correctamente')
-      } else if (mode === 'register' && data.user) {
-        setMessage('Registro exitoso. Revisa tu correo si la confirmación está activa.')
+    // Simular delay de red
+    setTimeout(() => {
+      if (!email || !password) {
+        setMessage('⚠️ Por favor completa todos los campos')
+        setLoading(false)
+        return
       }
-    } catch (error) {
-      setMessage('Ocurrió un error inesperado')
-    } finally {
+
+      // Crear usuario con los datos ingresados
+      const userData = {
+        email: email.toLowerCase().trim(),
+        password: password,
+        id: Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString()
+      }
+
+      // Guardar en localStorage
+      localStorage.setItem('userSession', JSON.stringify(userData))
+
+      // Actualizar estado
+      setSession(userData)
+      setIsAdmin(userData.email.endsWith('@admin.com'))
+
+      if (userData.email.endsWith('@admin.com')) {
+        setMessage('✅ ¡Bienvenido Administrador!')
+      } else {
+        setMessage('✅ ¡Ingreso exitoso! Bienvenido')
+      }
+
+      setEmail('')
+      setPassword('')
       setLoading(false)
-    }
+    }, 500)
   }
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setMessage('Sesión cerrada')
+    localStorage.removeItem('userSession')
+    setSession(null)
+    setIsAdmin(false)
+    setSelectedPage('inicio')
+    setMessage('✅ Sesión cerrada correctamente')
+    setTimeout(() => setMessage(''), 3000)
   }
 
-  useEffect(() => {
-    if (!isAdmin && selectedPage === 'panel-admin') {
-      setSelectedPage('inicio')
-    }
-  }, [isAdmin, selectedPage])
-
-  const visibleMenuItems = isAdmin
-    ? menuItems
-    : menuItems.filter((item) => item.key !== 'panel-admin')
-
   const renderPage = () => {
+    // Si no hay sesión, mostrar opciones de visitante
+    if (!session) {
+      switch (selectedPage) {
+        case 'inicio':
+          return <Inicio isAdmin={false} onNavigate={setSelectedPage} />
+        case 'acerca':
+          return <AcercaDe />
+        case 'ayuda':
+          return <Ayuda />
+        default:
+          return <Inicio isAdmin={false} onNavigate={setSelectedPage} />
+      }
+    }
+
+    // Usuario logueado
     switch (selectedPage) {
+      case 'inicio':
+        return <Inicio isAdmin={isAdmin} onNavigate={setSelectedPage} />
+
       case 'reportar':
         return <Reportar />
+
+      case 'mis-reportes':
+        return <MisReportes />
+
+      case 'guia-seguridad':
+        return <GuiaSeguridad />
+
+      // Solo para administradores
       case 'panel-admin':
-        return <PanelAdmin isAdmin={isAdmin} />
+        return isAdmin ? <PanelAdmin isAdmin={isAdmin} /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
+
+      case 'estadisticas':
+        return isAdmin ? <Estadisticas /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
+
+      case 'configuracion':
+        return isAdmin ? <Configuracion /> : <Inicio isAdmin={false} onNavigate={setSelectedPage} />
+
       default:
-        return <Inicio isAdmin={isAdmin} />
+        return <Inicio isAdmin={isAdmin} onNavigate={setSelectedPage} />
     }
   }
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-12 col-lg-10">
-          <div className="card shadow-sm border-0">
-            <div className="card-body p-4">
-              <h1 className="h3 mb-3">Proyecto PPI</h1>
-              <p className="text-muted mb-4">
-                {session ? 'Tu sesión está activa.' : 'Inicia sesión o crea una cuenta.'}
-              </p>
-
-              {!session ? (
-                <LoginForm
-                  mode={mode}
-                  email={email}
-                  password={password}
-                  loading={loading}
-                  message={message}
-                  onModeChange={setMode}
-                  onEmailChange={setEmail}
-                  onPasswordChange={setPassword}
-                  onSubmit={handleSubmit}
-                />
-              ) : (
-                <>
-                  <Menu items={visibleMenuItems} selected={selectedPage} onSelect={setSelectedPage} />
-                  {message ? <div className="alert alert-info py-2">{message}</div> : null}
-                  <div className="mb-3">
-                    <span className="fw-semibold">Usuario:</span> {session.user?.email}
-                    {profile?.role ? <span className="ms-2 text-muted">({profile.role})</span> : null}
-                  </div>
-                  {renderPage()}
-                  <div className="mt-4">
-                    <button className="btn btn-outline-danger" onClick={handleSignOut}>
-                      Cerrar sesión
-                    </button>
-                  </div>
-                </>
-              )}
+    <div className="d-flex flex-column min-vh-100">
+      {/* HEADER CON MENÚ */}
+      <header className="bg-light border-bottom shadow-sm sticky-top">
+        <div className="container-fluid py-3">
+          <div className="row align-items-center">
+            <div className="col">
+              <h1 className="h4 mb-0">🚫 Sistema Anónimo de Reporte de Bullying</h1>
             </div>
+            {session && (
+              <div className="col-auto text-end">
+                <small className="text-muted">
+                  {isAdmin && '👑 '}
+                  {session.email}
+                </small>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+
+        {/* MENÚ AVANZADO */}
+        <div className="container-fluid px-0">
+          <MenuAdvanced
+            session={session}
+            isAdmin={isAdmin}
+            selectedPage={selectedPage}
+            onSelect={setSelectedPage}
+            onLogout={handleSignOut}
+          />
+        </div>
+      </header>
+
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="flex-grow-1 py-5">
+        <div className="container">
+          {/* Si no está logueado y no está en inicio */}
+          {!session && selectedPage !== 'inicio' && (
+            <div className="row justify-content-center">
+              <div className="col-12 col-md-6">
+                <div className="card shadow-sm">
+                  <div className="card-body text-center p-5">
+                    <h2 className="mb-4">🔐 Acceso Requerido</h2>
+                    <p className="text-muted mb-4">
+                      Debes iniciar sesión para acceder a esta sección.
+                    </p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setSelectedPage('inicio')}
+                    >
+                      ← Volver al Inicio
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mostrar login si no está logueado */}
+          {!session && selectedPage === 'inicio' && (
+            <div className="row justify-content-center">
+              <div className="col-12 col-md-6">
+                <div className="card shadow-sm border-0">
+                  <div className="card-body p-5">
+                    <h2 className="h5 mb-4">Inicia sesión o regístrate</h2>
+                    <LoginForm
+                      mode={mode}
+                      email={email}
+                      password={password}
+                      loading={loading}
+                      message={message}
+                      onModeChange={setMode}
+                      onEmailChange={setEmail}
+                      onPasswordChange={setPassword}
+                      onSubmit={handleSubmit}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mostrar contenido si está logueado */}
+          {session && (
+            <div className="row">
+              <div className="col-12">
+                {message && <div className="alert alert-info alert-dismissible fade show" role="alert">
+                  {message}
+                  <button type="button" className="btn-close" onClick={() => setMessage('')}></button>
+                </div>}
+                {renderPage()}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-light border-top mt-5 py-4">
+        <div className="container text-center text-muted">
+          <small>© 2026 Sistema de Reporte de Bullying - Todos los derechos reservados</small>
+        </div>
+      </footer>
     </div>
   )
 }

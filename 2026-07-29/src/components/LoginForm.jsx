@@ -22,7 +22,7 @@ export function LoginForm({ mode, email, password, loading, message, onModeChang
         <div className="mb-3">
           <label className="form-label">Correo electrónico</label>
           <input
-            type="email"
+            type="text"
             className="form-control"
             value={email}
             onChange={(event) => onEmailChange(event.target.value)}
