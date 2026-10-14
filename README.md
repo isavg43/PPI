@@ -130,7 +130,9 @@ La definición detallada y la deuda actual de datos se encuentran en [taller/deu
 
 ## Autores
 
-Proyecto académico PPI. Completa esta sección con los nombres y usuarios de GitHub del equipo antes de entregar el repositorio.
+-Valentina lopez posada
+-Tomas zapata torres
+-Isabela Velez gonzales
 
 ## Licencia
 
