@@ -113,57 +113,61 @@ export function MisReportes() {
   return (
     <div className="page-content">
       <PageHeader
-        eyebrow="Historial"
-        titulo="Mis reportes"
-        descripcion="Aquí aparece el historial de los reportes que has publicado y su estado actual."
+        eyebrow="Seguimiento"
+        titulo="Etapas del reporte"
+        descripcion="Estas son las fases por las que pasa una denuncia desde que se registra hasta que recibe una respuesta."
       />
 
-      {loading ? (
-        <div className="alert alert-info">Cargando historial de reportes...</div>
-      ) : reports.length === 0 ? (
-        <div className="alert alert-light border">
-          <strong>No has publicado reportes aún.</strong>
-          <p className="mb-0">Cuando envíes una denuncia, aparecerá aquí con la fecha de publicación y su estado.</p>
-        </div>
-      ) : (
-        <div className="d-grid gap-3">
-          {reports.map((report) => (
-            <article className="card border-0 shadow-sm" key={report.id}>
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
-                  <div>
-                    <span className="badge text-bg-light text-dark border">
-                      {reportTypeLabels[report.type] ?? 'Reporte'}
+      <div className="status-timeline">
+        <div className="timeline-step is-current"><span>1</span><div><strong>Recibido</strong><p>La información llega al sistema y se registra con fecha y tipo de situación.</p></div></div>
+        <div className="timeline-step"><span>2</span><div><strong>En revisión</strong><p>El equipo analiza el caso, valida la información y define las medidas de acompañamiento.</p></div></div>
+        <div className="timeline-step"><span>3</span><div><strong>Resuelto</strong><p>Se da respuesta a la situación y se documenta la acción tomada o el cierre del caso.</p></div></div>
+      </div>
+
+      <div className="callout callout-muted"><strong>Privacidad primero.</strong><span>Los reportes son anónimos y se gestionan con confidencialidad.</span></div>
+
+      <div className="mt-4">
+        <h3 className="h5">Historial de reportes</h3>
+
+        {loading ? (
+          <div className="alert alert-info">Cargando historial...</div>
+        ) : reports.length === 0 ? (
+          <div className="alert alert-light border">
+            <strong>No has publicado reportes aún.</strong>
+            <p className="mb-0">Cuando envíes una denuncia, aparecerá aquí con la fecha y el estado actual.</p>
+          </div>
+        ) : (
+          <div className="d-grid gap-3">
+            {reports.map((report) => (
+              <article className="card border-0 shadow-sm" key={report.id}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
+                    <div>
+                      <span className="badge text-bg-light text-dark border">
+                        {reportTypeLabels[report.type] ?? 'Reporte'}
+                      </span>
+                      <h4 className="h6 mt-2 mb-0">Reporte publicado</h4>
+                    </div>
+                    <span className={`badge ${statusColors[report.status] ?? 'bg-secondary-subtle text-secondary-emphasis border'}`}>
+                      {statusLabels[report.status] ?? 'Sin estado'}
                     </span>
-                    <h3 className="h5 mt-2 mb-0">Reporte publicado</h3>
                   </div>
-                  <span className={`badge ${statusColors[report.status] ?? 'bg-secondary-subtle text-secondary-emphasis border'}`}>
-                    {statusLabels[report.status] ?? 'Sin estado'}
-                  </span>
+
+                  <p className="text-body-secondary small mb-2">Publicado el {formatDate(report.created_at)}</p>
+                  <p className="mb-3">{report.description}</p>
+
+                  {report.evidence_url ? (
+                    <a href={report.evidence_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
+                      Ver evidencia
+                    </a>
+                  ) : (
+                    <span className="text-body-secondary small">Sin evidencia adjunta</span>
+                  )}
                 </div>
-
-                <p className="text-body-secondary small mb-2">
-                  Publicado el {formatDate(report.created_at)}
-                </p>
-
-                <p className="mb-3">{report.description}</p>
-
-                {report.evidence_url ? (
-                  <a href={report.evidence_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
-                    Ver evidencia
-                  </a>
-                ) : (
-                  <span className="text-body-secondary small">Sin evidencia adjunta</span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-
-      <div className="callout callout-muted mt-4">
-        <strong>Privacidad primero.</strong>
-        <span>Los reportes son anónimos y se muestran en este historial como referencia del proceso.</span>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
