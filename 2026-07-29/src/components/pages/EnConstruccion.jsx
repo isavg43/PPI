@@ -64,15 +64,107 @@ export function Ayuda() {
 }
 
 export function MisReportes() {
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setReports(getReports())
+    setLoading(false)
+  }, [])
+
+  const reportTypeLabels = {
+    fisico: 'Bullying físico',
+    psicologico: 'Bullying psicológico',
+    robo: 'Robo / sustracción',
+    discriminacion: 'Discriminación',
+    amenazas: 'Amenazas',
+    redes: 'Acoso por redes',
+    verbal: 'Bullying verbal',
+    otro: 'Otra situación',
+  }
+
+  const statusLabels = {
+    pendiente: 'Pendiente',
+    en_revision: 'En revisión',
+    resuelta: 'Resuelta',
+  }
+
+  const statusColors = {
+    pendiente: 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+    en_revision: 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+    resuelta: 'bg-success-subtle text-success-emphasis border border-success-subtle',
+  }
+
+  const formatDate = (value) => {
+    if (!value) return 'Sin fecha'
+
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'Sin fecha'
+
+    return new Intl.DateTimeFormat('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date)
+  }
+
   return (
     <div className="page-content">
-      <PageHeader eyebrow="Seguimiento" titulo="Mis reportes" descripcion="Consulta cómo se gestiona una denuncia y qué puedes esperar del proceso." />
-      <div className="status-timeline">
-        <div className="timeline-step is-current"><span>1</span><div><strong>Recibido</strong><p>El equipo recibe la información y verifica que sea comprensible.</p></div></div>
-        <div className="timeline-step"><span>2</span><div><strong>En revisión</strong><p>Se analiza la situación y se determinan las medidas de apoyo.</p></div></div>
-        <div className="timeline-step"><span>3</span><div><strong>Resuelto</strong><p>El caso cuenta con una respuesta y acciones de seguimiento.</p></div></div>
+      <PageHeader
+        eyebrow="Historial"
+        titulo="Mis reportes"
+        descripcion="Aquí aparece el historial de los reportes que has publicado y su estado actual."
+      />
+
+      {loading ? (
+        <div className="alert alert-info">Cargando historial de reportes...</div>
+      ) : reports.length === 0 ? (
+        <div className="alert alert-light border">
+          <strong>No has publicado reportes aún.</strong>
+          <p className="mb-0">Cuando envíes una denuncia, aparecerá aquí con la fecha de publicación y su estado.</p>
+        </div>
+      ) : (
+        <div className="d-grid gap-3">
+          {reports.map((report) => (
+            <article className="card border-0 shadow-sm" key={report.id}>
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
+                  <div>
+                    <span className="badge text-bg-light text-dark border">
+                      {reportTypeLabels[report.type] ?? 'Reporte'}
+                    </span>
+                    <h3 className="h5 mt-2 mb-0">Reporte publicado</h3>
+                  </div>
+                  <span className={`badge ${statusColors[report.status] ?? 'bg-secondary-subtle text-secondary-emphasis border'}`}>
+                    {statusLabels[report.status] ?? 'Sin estado'}
+                  </span>
+                </div>
+
+                <p className="text-body-secondary small mb-2">
+                  Publicado el {formatDate(report.created_at)}
+                </p>
+
+                <p className="mb-3">{report.description}</p>
+
+                {report.evidence_url ? (
+                  <a href={report.evidence_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
+                    Ver evidencia
+                  </a>
+                ) : (
+                  <span className="text-body-secondary small">Sin evidencia adjunta</span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <div className="callout callout-muted mt-4">
+        <strong>Privacidad primero.</strong>
+        <span>Los reportes son anónimos y se muestran en este historial como referencia del proceso.</span>
       </div>
-      <div className="callout callout-muted"><strong>Privacidad primero.</strong><span>Los reportes son anónimos; por eso no mostramos una bandeja personal con datos que puedan identificarte.</span></div>
     </div>
   )
 }

@@ -85,12 +85,6 @@ export function MenuAdvanced({
       description: 'Gestionar reportes'
     },
     {
-      key: 'mis-reportes',
-      label: '📋 Mis reportes',
-      inConstruction: false,
-      description: 'Seguimiento de mis denuncias'
-    },
-    {
       key: 'estadisticas',
       label: '📊 Estadísticas',
       inConstruction: false,
