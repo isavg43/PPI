@@ -48,6 +48,13 @@ export function Ayuda() {
     ['¿Qué hago si estoy en peligro ahora?', 'Busca un adulto de confianza, aléjate del riesgo y contacta a los servicios de emergencia de tu localidad. El formulario no sustituye una atención urgente.'],
   ]
 
+  const supportContacts = [
+    { label: 'Línea de atención institucional', value: '601 234 5678' },
+    { label: 'Canal de soporte técnico', value: 'soporte@institucion.edu.co' },
+    { label: 'Atención por fallas del sistema', value: '+57 300 123 4567' },
+    { label: 'Emergencias', value: '112' },
+  ]
+
   return (
     <div className="page-content">
       <PageHeader eyebrow="Centro de ayuda" titulo="Preguntas frecuentes" descripcion="Respuestas rápidas para usar el sistema y pedir apoyo de forma responsable." />
@@ -59,6 +66,17 @@ export function Ayuda() {
           </details>
         ))}
       </div>
+
+      <section className="info-section mt-4">
+        <h3>Contacto de apoyo y emergencia</h3>
+        <div className="d-grid gap-2">
+          {supportContacts.map((contact) => (
+            <div key={contact.label} className="alert alert-light border mb-0 py-2">
+              <strong>{contact.label}:</strong> {contact.value}
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
